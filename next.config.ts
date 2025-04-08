@@ -1,15 +1,18 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  serverExternalPackages: ['puppeteer'],
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  serverExternalPackages: ['puppeteer-core', 'puppeteer'],
   
-  // Configure webpack to handle puppeteer
-  webpack: (config, { isServer }) => {
+  webpack: (config:any, { isServer }:any) => {
     if (isServer) {
+      // Add more optimizations for Puppeteer on Vercel
       config.externals.push('puppeteer-core');
+      config.externals.push('@sparticuz/chromium');
     }
     return config;
   },
+  
+  // Optimize output for Vercel
+  output: 'standalone',
 };
 
-export default nextConfig;
+module.exports = nextConfig;
