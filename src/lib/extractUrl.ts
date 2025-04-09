@@ -22,21 +22,35 @@ export async function extractTargetUrl(googleNewsUrl: string): Promise<string> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ url: urlToProcess }),
+      cache: 'no-store', // Disable caching for this request
     });
 
-    // Parse the response
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to extract URL');
+    // Check if there was a network error
+    if (!response) {
+      throw new Error('Network error - unable to connect to extraction service');
     }
 
+    // Get response data (even if it's an error)
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      throw new Error(`Invalid response from server: ${response.statusText}`);
+    }
+    
+    // Check for error response
+    if (!response.ok) {
+      throw new Error(data?.message || `Error ${response.status}: ${response.statusText}`);
+    }
+
+    // Check if we have a valid target URL
     if (!data.targetUrl) {
-      throw new Error('Could not extract target URL from this Google News link');
+      throw new Error('No target URL was found in this Google News link');
     }
 
     return data.targetUrl;
   } catch (error) {
+    console.error('Error in extractTargetUrl:', error);
     if (error instanceof Error) {
       throw error;
     }
